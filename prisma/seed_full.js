@@ -55,6 +55,7 @@ async function main() {
       descripcion: 'Grupo de tecnología',
       progreso_pct: 0,
       estado: 'activo',
+      updated_at: new Date(),
     },
   });
 

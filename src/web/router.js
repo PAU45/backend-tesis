@@ -11,6 +11,8 @@ const { aparienciaRouter } = require('./routes/apariencia');
 const { metasRouter } = require('./routes/metas');
 const { perfilRouter } = require('./routes/perfil');
 const { gruposRouter } = require('./routes/grupos');
+const { organizationsRouter } = require('./routes/organizations');
+const { departmentsRouter } = require('./routes/departments');
 const { boardsRouter } = require('./routes/boards');
 const { columnsRouter } = require('./routes/columns');
 const { tasksRouter } = require('./routes/tasks');
@@ -22,6 +24,8 @@ router.use('/auth', authRouter);
 router.use('/crud', crudRouter);
 
 router.use('/usuario', usuarioRouter);
+// Alias in English for frontend compatibility
+router.use('/users', usuarioRouter);
 
 router.use('/usuario/notificaciones', notificacionesRouter);
 
@@ -34,6 +38,9 @@ router.use('/usuario/metas', metasRouter);
 router.use('/usuario/perfil', perfilRouter);
 
 router.use('/grupos', gruposRouter);
+
+router.use('/organizations', organizationsRouter);
+router.use('/departments', departmentsRouter);
 
 router.use('/boards', boardsRouter);
 
