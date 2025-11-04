@@ -38,6 +38,8 @@ router.use('/usuario/metas', metasRouter);
 router.use('/usuario/perfil', perfilRouter);
 
 router.use('/grupos', gruposRouter);
+// English alias for frontend expecting /groups
+router.use('/groups', gruposRouter);
 
 router.use('/organizations', organizationsRouter);
 router.use('/departments', departmentsRouter);

@@ -50,7 +50,11 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 
+// Mount API router at /api
 app.use('/api', apiRouter);
+// Some frontends accidentally prefix the base url with `/api` producing `/api/api/...`.
+// Add a compatibility mount so requests to `/api/api/*` still work in dev while frontend is fixed.
+app.use('/api/api', apiRouter);
 
 // Manejo de rutas no encontradas con http-errors
 app.use((req, res, next) => {

@@ -25,7 +25,8 @@ router.get('/', requireAuth, async (req, res, next) => {
     ]);
 
     const data = orgs.map(o => ({ id: o.id_org, name: o.nombre, created_at: o.fecha_creacion }));
-    res.json({ data: { organizations: data, meta: { total, limit, offset } } });
+    // Return both wrapped and root lists for frontend compatibility.
+    res.json({ data: { organizations: data, meta: { total, limit, offset } }, organizations: data, meta: { total, limit, offset } });
   } catch (err) {
     next(err);
   }

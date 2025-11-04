@@ -29,7 +29,7 @@ function signTokens(user, roles = []) {
   return { accessToken, refreshToken };
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const { nombre, email, password } = req.body;
@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const { email, password } = req.body;
@@ -71,7 +71,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const { refreshToken } = req.body;
@@ -90,7 +90,7 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-router.post('/logout', async (req, res) => {
+router.post('/logout', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const { refreshToken } = req.body;
@@ -106,7 +106,7 @@ router.post('/logout', async (req, res) => {
 module.exports = { authRouter: router };
 
 // Info del usuario autenticado (id, email, roles)
-router.get('/me', requireAuth, async (req, res) => {
+router.get('/me', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user?.sub;

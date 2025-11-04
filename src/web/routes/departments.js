@@ -25,7 +25,8 @@ router.get('/', requireAuth, async (req, res, next) => {
     ]);
 
     const data = deps.map(d => ({ id: d.id_departamento, organization_id: d.id_org, name: d.nombre }));
-    res.json({ data: { departments: data, meta: { total, limit, offset } } });
+    // Return both wrapped and root lists for frontend compatibility.
+    res.json({ data: { departments: data, meta: { total, limit, offset } }, departments: data, meta: { total, limit, offset } });
   } catch (err) {
     next(err);
   }
