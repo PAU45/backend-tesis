@@ -4,7 +4,7 @@ const { requireAuth } = require('../secure/requireAuth');
 const router = Router();
 
 // GET /api/usuario/metas - Objetivos de bienestar
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;
@@ -25,7 +25,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/usuario/metas - Actualizar objetivos de bienestar
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;

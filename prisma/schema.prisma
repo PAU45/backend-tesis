@@ -15,76 +15,79 @@ datasource db {
 // =========================
 
 model organizaciones {
-  id_org         Int            @id @default(autoincrement())
+  id_org         Int       @id @default(autoincrement())
   nombre         String?
   sector         String?
   pais           String?
   tamano         Int?
   fecha_creacion DateTime?
 
-  departamentos  departamentos[]
-  usuarios       usuarios[]
-  grupos         grupos_trabajo[]
-  reportes       reportes_productividad[]
-  indicadores    indicadores_organizacion[]
-  destacados     empleados_destacados[]
+  departamentos departamentos[]
+  usuarios      usuarios[]
+  grupos        grupos_trabajo[]
+  reportes      reportes_productividad[]
+  indicadores   indicadores_organizacion[]
+  destacados    empleados_destacados[]
 }
 
 model departamentos {
-  id_departamento Int   @id @default(autoincrement())
+  id_departamento Int     @id @default(autoincrement())
   id_org          Int
   nombre          String?
   descripcion     String?
 
-  organizacion organizaciones @relation(fields: [id_org], references: [id_org])
-  usuarios      usuarios[]
+  organizacion   organizaciones   @relation(fields: [id_org], references: [id_org])
+  usuarios       usuarios[]
+  grupos_trabajo grupos_trabajo[]
 }
 
 model usuarios {
-  id_usuario        Int       @id @default(autoincrement())
-  nombre            String?
-  email             String    @unique
-  password_hash     String?
-  estado            String?
-  id_org            Int?
-  id_departamento   Int?
-  cargo             String?
-  telefono          String?
-  fecha_nacimiento  DateTime?
-  fecha_creacion    DateTime?
+  id_usuario          Int       @id @default(autoincrement())
+  nombre              String?
+  identificacion      String?
+  email               String    @unique
+  password_hash       String?
+  estado              String?
+  id_org              Int?
+  id_departamento     Int?
+  foto_perfil         String?
+  cargo               String?
+  telefono            String?
+  fecha_nacimiento    DateTime?
+  fecha_creacion      DateTime?
   fecha_actualizacion DateTime?
 
   organizacion organizaciones? @relation(fields: [id_org], references: [id_org])
   departamento departamentos?  @relation(fields: [id_departamento], references: [id_departamento])
 
-  usuarios_roles usuarios_roles[]
-  sesiones       sesiones[]
-  auditorias     auditoria[]
-  respuestas     respuestas_diarias[]
-  evaluaciones   evaluaciones[]
-  registros      registros_emocionales[]
-  progreso       progreso_bienestar[]
-  recomendaciones recomendaciones[]
-  notificaciones notificaciones[]
-  tareas         tareas[]
-  metas          metas_bienestar[]
-  conversaciones conversaciones_ia[]
-  sesiones_paciente sesiones_terapia[] @relation("Paciente")
-  sesiones_profesional sesiones_terapia[] @relation("Profesional")
-  grupos_miembros grupos_miembros[]
-  llamadas       llamadas[]
-  productividad  productividad_empleado[]
-  destacados     empleados_destacados[]
-  preferencias   preferencias_usuario[]
-  configuraciones configuracion_notificaciones[]
-  privacidad_datos privacidad_datos[]
-  descargas      descargas_reportes[]
-  tasks_asignadas task_asignado[]
+  usuarios_roles       usuarios_roles[]
+  sesiones             sesiones[]
+  auditorias           auditoria[]
+  respuestas           respuestas_diarias[]
+  evaluaciones         evaluaciones[]
+  registros            registros_emocionales[]
+  progreso             progreso_bienestar[]
+  recomendaciones      recomendaciones[]
+  notificaciones       notificaciones[]
+  tareas               tareas[]
+  metas                metas_bienestar[]
+  conversaciones       conversaciones_ia[]
+  sesiones_paciente    sesiones_terapia[]             @relation("Paciente")
+  sesiones_profesional sesiones_terapia[]             @relation("Profesional")
+  grupos_miembros      grupos_miembros[]
+  llamadas             llamadas[]
+  productividad        productividad_empleado[]
+  destacados           empleados_destacados[]
+  preferencias         preferencias_usuario[]
+  configuraciones      configuracion_notificaciones[]
+  privacidad_datos     privacidad_datos[]
+  descargas            descargas_reportes[]
+  tasks_asignadas      task_asignado[]
 }
 
 model roles {
-  id_rol    Int     @id @default(autoincrement())
-  nombre_rol String? @unique
+  id_rol      Int     @id @default(autoincrement())
+  nombre_rol  String? @unique
   descripcion String?
 
   usuarios_roles usuarios_roles[]
@@ -92,7 +95,7 @@ model roles {
 }
 
 model usuarios_roles {
-  id_usuario_rol Int @id @default(autoincrement())
+  id_usuario_rol Int       @id @default(autoincrement())
   id_usuario     Int
   id_rol         Int
   created_at     DateTime?
@@ -108,20 +111,20 @@ model usuarios_roles {
 // =========================
 
 model sesiones {
-  id_sesion  Int      @id @default(autoincrement())
-  id_usuario Int
-  token      String?
-  ip_origen  String?
-  user_agent String?
+  id_sesion    Int       @id @default(autoincrement())
+  id_usuario   Int
+  token        String?
+  ip_origen    String?
+  user_agent   String?
   fecha_inicio DateTime?
   fecha_fin    DateTime?
-  estado     String?
+  estado       String?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model permisos {
-  id_permiso Int    @id @default(autoincrement())
+  id_permiso Int     @id @default(autoincrement())
   recurso    String?
   accion     String?
 
@@ -140,7 +143,7 @@ model roles_permisos {
 }
 
 model auditoria {
-  id_auditoria         Int      @id @default(autoincrement())
+  id_auditoria         Int       @id @default(autoincrement())
   id_usuario           Int?
   accion               String?
   tabla_afectada       String?
@@ -150,6 +153,25 @@ model auditoria {
   ip_origen            String?
 
   usuario usuarios? @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model audit_logs {
+  id            String   @id @default(uuid())
+  actor_id      Int?
+  actor_email   String?
+  action        String
+  resource_type String?
+  resource_id   String?
+  level         String   @default("info")
+  details       Json?
+  ip            String?
+  user_agent    String?
+  outcome       String?
+  created_at    DateTime @default(now())
+
+  @@index([actor_id])
+  @@index([resource_type, resource_id])
+  @@index([created_at])
 }
 
 // =========================
@@ -167,7 +189,7 @@ model preguntas_diarias {
 }
 
 model respuestas_diarias {
-  id_respuesta Int     @id @default(autoincrement())
+  id_respuesta Int       @id @default(autoincrement())
   id_usuario   Int
   fecha        DateTime?
   id_pregunta  Int
@@ -180,40 +202,40 @@ model respuestas_diarias {
 }
 
 model evaluaciones {
-  id_evaluacion Int      @id @default(autoincrement())
-  id_usuario    Int
-  tipo          String?
-  puntaje       Float?
+  id_evaluacion  Int       @id @default(autoincrement())
+  id_usuario     Int
+  tipo           String?
+  puntaje        Float?
   interpretacion String?
-  fecha         DateTime?
+  fecha          DateTime?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model registros_emocionales {
-  id_registro Int      @id @default(autoincrement())
-  id_usuario  Int
-  fecha       DateTime?
+  id_registro      Int       @id @default(autoincrement())
+  id_usuario       Int
+  fecha            DateTime?
   estado_emocional String?
-  notas       String?
+  notas            String?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model progreso_bienestar {
-  id_progreso     Int      @id @default(autoincrement())
-  id_usuario      Int
-  periodo         String?
-  bienestar_pct   Float?
-  tendencia       Float?
-  metas_logradas  Int?
-  resumen         String?
+  id_progreso    Int     @id @default(autoincrement())
+  id_usuario     Int
+  periodo        String?
+  bienestar_pct  Float?
+  tendencia      Float?
+  metas_logradas Int?
+  resumen        String?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model recomendaciones {
-  id_recomendacion Int      @id @default(autoincrement())
+  id_recomendacion Int       @id @default(autoincrement())
   id_usuario       Int
   fecha            DateTime?
   area_mejora      String?
@@ -221,7 +243,7 @@ model recomendaciones {
   origen           String?
   id_recurso       Int?
 
-  usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
+  usuario usuarios             @relation(fields: [id_usuario], references: [id_usuario])
   recurso recursos_biblioteca? @relation(fields: [id_recurso], references: [id_recurso])
 }
 
@@ -230,7 +252,7 @@ model recomendaciones {
 // =========================
 
 model recursos_biblioteca {
-  id_recurso  Int      @id @default(autoincrement())
+  id_recurso  Int       @id @default(autoincrement())
   titulo      String?
   tipo        String?
   url         String?
@@ -243,7 +265,7 @@ model recursos_biblioteca {
 }
 
 model notificaciones {
-  id_notificacion Int      @id @default(autoincrement())
+  id_notificacion Int       @id @default(autoincrement())
   id_usuario      Int
   mensaje         String?
   tipo            String?
@@ -258,7 +280,7 @@ model notificaciones {
 // =========================
 
 model tareas {
-  id_tarea            Int      @id @default(autoincrement())
+  id_tarea            Int       @id @default(autoincrement())
   id_usuario          Int
   titulo              String?
   descripcion         String?
@@ -269,25 +291,25 @@ model tareas {
   fecha_vencimiento   DateTime?
   fecha_completada    DateTime?
 
-  usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
+  usuario usuarios     @relation(fields: [id_usuario], references: [id_usuario])
   logs    tareas_log[]
 }
 
 model metas_bienestar {
-  id_meta       Int      @id @default(autoincrement())
-  id_usuario    Int
-  titulo        String?
-  descripcion   String?
-  objetivo_pct  Float?
-  progreso_pct  Float?
-  fecha_inicio  DateTime?
-  fecha_fin     DateTime?
+  id_meta      Int       @id @default(autoincrement())
+  id_usuario   Int
+  titulo       String?
+  descripcion  String?
+  objetivo_pct Float?
+  progreso_pct Float?
+  fecha_inicio DateTime?
+  fecha_fin    DateTime?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model tareas_log {
-  id_tarea_log Int      @id @default(autoincrement())
+  id_tarea_log Int       @id @default(autoincrement())
   id_tarea     Int
   accion       String?
   fecha_hora   DateTime?
@@ -301,23 +323,23 @@ model tareas_log {
 // =========================
 
 model conversaciones_ia {
-  id_conversacion Int      @id @default(autoincrement())
+  id_conversacion Int       @id @default(autoincrement())
   id_usuario      Int
   fecha_inicio    DateTime?
   estado          String?
   contexto_mood   String?
 
-  usuario  usuarios     @relation(fields: [id_usuario], references: [id_usuario])
+  usuario  usuarios      @relation(fields: [id_usuario], references: [id_usuario])
   mensajes mensajes_ia[]
 }
 
 model mensajes_ia {
-  id_mensaje     Int      @id @default(autoincrement())
+  id_mensaje      Int       @id @default(autoincrement())
   id_conversacion Int
-  emisor         String?
-  contenido      String?
-  fecha_hora     DateTime?
-  tags           String?
+  emisor          String?
+  contenido       String?
+  fecha_hora      DateTime?
+  tags            String?
 
   conversacion conversaciones_ia @relation(fields: [id_conversacion], references: [id_conversacion])
 }
@@ -330,201 +352,205 @@ model mensajes_ia {
 // =========================
 
 model board {
-  id           Int      @id @default(autoincrement())
-  nombre       String
-  descripcion  String?
-  id_grupo     Int
-  grupo        grupos_trabajo @relation(fields: [id_grupo], references: [id_grupo])
-  columns      column[]
-  tasks        task[]
-  sprints      sprint[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int            @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  id_grupo    Int
+  grupo       grupos_trabajo @relation(fields: [id_grupo], references: [id_grupo])
+  columns     column[]
+  tasks       task[]
+  sprints     sprint[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model column {
-  id         Int    @id @default(autoincrement())
-  nombre     String
-  orden      Int
-  id_board   Int
-  board      board  @relation(fields: [id_board], references: [id])
-  tasks      task[]
+  id       Int    @id @default(autoincrement())
+  nombre   String
+  orden    Int
+  id_board Int
+  board    board  @relation(fields: [id_board], references: [id])
+  tasks    task[]
 }
 
 model task {
-  id              Int      @id @default(autoincrement())
-  titulo          String
-  descripcion     String?
-  id_column       Int
-  column          column   @relation(fields: [id_column], references: [id])
-  id_board        Int
-  board           board    @relation(fields: [id_board], references: [id])
-  id_grupo        Int
-  grupo           grupos_trabajo @relation(fields: [id_grupo], references: [id_grupo])
-  prioridad       String?
-  etiquetas       String?
+  id               Int             @id @default(autoincrement())
+  titulo           String
+  descripcion      String?
+  id_column        Int
+  column           column          @relation(fields: [id_column], references: [id])
+  id_board         Int
+  board            board           @relation(fields: [id_board], references: [id])
+  id_grupo         Int
+  grupo            grupos_trabajo  @relation(fields: [id_grupo], references: [id_grupo])
+  prioridad        String?
+  etiquetas        String?
   fechaVencimiento DateTime?
-  estado          String?
-  id_sprint       Int?
-  sprint          sprint?  @relation(fields: [id_sprint], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  asignados       task_asignado[]
+  estado           String?
+  id_sprint        Int?
+  sprint           sprint?         @relation(fields: [id_sprint], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  asignados        task_asignado[]
 }
 
 model task_asignado {
-  id        Int    @id @default(autoincrement())
-  id_task   Int
+  id         Int      @id @default(autoincrement())
+  id_task    Int
   id_usuario Int
-  task      task   @relation(fields: [id_task], references: [id])
-  usuario   usuarios @relation(fields: [id_usuario], references: [id_usuario])
+  task       task     @relation(fields: [id_task], references: [id])
+  usuario    usuarios @relation(fields: [id_usuario], references: [id_usuario])
 
   @@unique([id_task, id_usuario])
 }
 
 model sprint {
-  id           Int      @id @default(autoincrement())
-  id_board     Int
-  board        board    @relation(fields: [id_board], references: [id])
-  nombre       String
-  fechaInicio  DateTime
-  fechaFin     DateTime
-  estado       String?
-  tasks        task[]
+  id          Int      @id @default(autoincrement())
+  id_board    Int
+  board       board    @relation(fields: [id_board], references: [id])
+  nombre      String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  estado      String?
+  tasks       task[]
 }
+
 // =========================
 
 model sesiones_terapia {
-  id_sesion       Int      @id @default(autoincrement())
-  id_usuario      Int
-  id_profesional  Int
-  tipo            String?
-  fecha_inicio    DateTime?
-  fecha_fin       DateTime?
-  estado          String?
-  progreso_pct    Float?
-  notas           String?
+  id_sesion      Int       @id @default(autoincrement())
+  id_usuario     Int
+  id_profesional Int
+  tipo           String?
+  fecha_inicio   DateTime?
+  fecha_fin      DateTime?
+  estado         String?
+  progreso_pct   Float?
+  notas          String?
 
   paciente    usuarios @relation("Paciente", fields: [id_usuario], references: [id_usuario])
   profesional usuarios @relation("Profesional", fields: [id_profesional], references: [id_usuario])
 }
 
 model grupos_trabajo {
-  id_grupo     Int      @id @default(autoincrement())
-  id_org       Int
-  nombre       String?
-  descripcion  String?
-  progreso_pct Float?
-  estado       String?
-  leader_id    Int?
-  visibility   String?  @default("private")
-  created_by   Int?
-  created_at   DateTime @default(now())
-  updated_at   DateTime?
+  id_grupo        Int       @id @default(autoincrement())
+  id_org          Int
+  id_departamento Int?
+  nombre          String?
+  descripcion     String?
+  progreso_pct    Float?
+  estado          String?
+  leader_id       Int?
+  visibility      String?   @default("private")
+  created_by      Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime?
 
-  organizacion organizaciones @relation(fields: [id_org], references: [id_org])
+  organizacion organizaciones    @relation(fields: [id_org], references: [id_org])
+  departamento departamentos?    @relation(fields: [id_departamento], references: [id_departamento])
   miembros     grupos_miembros[]
   boards       board[]
   tasks        task[]
 }
 
 model grupos_miembros {
-  id_grupo_miembro Int   @id @default(autoincrement())
+  id_grupo_miembro Int       @id @default(autoincrement())
   id_grupo         Int
   id_usuario       Int
   rol_en_grupo     String?
-  is_leader        Boolean? @default(false)
+  is_leader        Boolean?  @default(false)
   joined_at        DateTime?
 
   grupo   grupos_trabajo @relation(fields: [id_grupo], references: [id_grupo])
-  usuario usuarios        @relation(fields: [id_usuario], references: [id_usuario])
+  usuario usuarios       @relation(fields: [id_usuario], references: [id_usuario])
 
   @@unique([id_grupo, id_usuario])
 }
 
 model llamadas {
-  id_llamada       Int      @id @default(autoincrement())
-  id_empleado      Int
-  fecha            DateTime?
-  duracion_seg     Int?
-  resultado        String?
+  id_llamada        Int       @id @default(autoincrement())
+  id_empleado       Int
+  fecha             DateTime?
+  duracion_seg      Int?
+  resultado         String?
   relacion_proyecto String?
 
   empleado usuarios @relation(fields: [id_empleado], references: [id_usuario])
 }
 
 model productividad_empleado {
-  id_prod               Int      @id @default(autoincrement())
-  id_usuario            Int
-  periodo               String?
-  evaluaciones_recibidas Int?
+  id_prod                  Int     @id @default(autoincrement())
+  id_usuario               Int
+  periodo                  String?
+  evaluaciones_recibidas   Int?
   rendimiento_promedio_pct Float?
-  casos_resueltos       Int?
+  casos_resueltos          Int?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model reportes_productividad {
-  id_reporte        Int      @id @default(autoincrement())
-  id_org            Int
-  fecha             DateTime?
-  entregables       Int?
+  id_reporte         Int       @id @default(autoincrement())
+  id_org             Int
+  fecha              DateTime?
+  entregables        Int?
   tiempo_entrega_pct Float?
-  efectividad_score Float?
-  retrasos          Int?
-  por_departamento  String?
+  efectividad_score  Float?
+  retrasos           Int?
+  por_departamento   String?
 
   organizacion organizaciones @relation(fields: [id_org], references: [id_org])
 }
 
 model empleados_destacados {
-  id_destacado Int      @id @default(autoincrement())
+  id_destacado Int     @id @default(autoincrement())
   id_org       Int
   periodo      String?
   id_usuario   Int
   motivo       String?
 
   organizacion organizaciones @relation(fields: [id_org], references: [id_org])
-  usuario      usuarios        @relation(fields: [id_usuario], references: [id_usuario])
+  usuario      usuarios       @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 // =========================
 // Preferencias, configuración y privacidad
 // =========================
 
- 
 model preferencias_usuario {
-  id_preferencia Int      @id @default(autoincrement())
-  id_usuario     Int
-  idioma         String?
-  pais           String?
-  zona_horaria   String?
-  tema           String?
-  color_principal String?
+  id_preferencia           Int     @id @default(autoincrement())
+  id_usuario               Int
+  idioma                   String?
+  pais                     String?
+  zona_horaria             String?
+  tema                     String?
+  color_principal          String?
   frecuencia_recordatorios String?
-  intereses_bienestar String?
+  intereses_bienestar      String?
+  actividades_favoritas    String?
+  sobre_mi                 String?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model configuracion_notificaciones {
-  id_conf_notif Int   @id @default(autoincrement())
-  id_usuario    Int
-  meditacion    Boolean?
-  tareas        Boolean?
-  preguntas_diarias Boolean?
+  id_conf_notif           Int      @id @default(autoincrement())
+  id_usuario              Int
+  meditacion              Boolean?
+  tareas                  Boolean?
+  preguntas_diarias       Boolean?
   bienestar_recordatorios Boolean?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model privacidad_datos {
-  id_privacidad  Int      @id @default(autoincrement())
-  id_usuario     Int
+  id_privacidad                Int       @id @default(autoincrement())
+  id_usuario                   Int
   compartir_con_investigadores Boolean?
-  modo_offline   Boolean?
-  backup_automatico Boolean?
-  fecha_aceptacion DateTime?
+  modo_offline                 Boolean?
+  backup_automatico            Boolean?
+  fecha_aceptacion             DateTime?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
@@ -534,21 +560,34 @@ model privacidad_datos {
 // =========================
 
 model indicadores_organizacion {
-  id_indicador  Int      @id @default(autoincrement())
-  id_org        Int
-  fecha         DateTime?
+  id_indicador   Int       @id @default(autoincrement())
+  id_org         Int
+  fecha          DateTime?
   tipo_indicador String?
-  valor         Float?
+  valor          Float?
 
   organizacion organizaciones @relation(fields: [id_org], references: [id_org])
 }
 
 model descargas_reportes {
-  id_descarga  Int      @id @default(autoincrement())
+  id_descarga  Int       @id @default(autoincrement())
   id_usuario   Int
   tipo_reporte String?
   fecha_hora   DateTime?
   formato      String?
 
   usuario usuarios @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+// =========================
+// Memoria para IA (Gemini)
+// =========================
+
+model IaMemoria {
+  id        Int      @id @default(autoincrement())
+  userId    Int      // ID del cliente o trabajador
+  rol       String   // 'cliente' o 'trabajador'
+  clave     String   // Frase clave o dato relevante
+  valor     String   // Valor asociado (ej: "cumpleaños", "preferencia", etc)
+  createdAt DateTime @default(now())
 }

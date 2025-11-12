@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../../prisma');
 const { requireAuth } = require('../secure/requireAuth');
+const { audit } = require('../../lib/audit');
 
 const router = Router();
 
@@ -45,6 +46,17 @@ router.post('/register', async (req, res, next) => {
 
     await prisma.sesiones.create({ data: { id_usuario: user.id_usuario, token: tokens.refreshToken, estado: 'activa', fecha_inicio: new Date() } });
 
+    await audit({
+      actorId: user.id_usuario,
+      actorEmail: user.email,
+      action: 'users.register',
+      resourceType: 'usuarios',
+      resourceId: user.id_usuario,
+      details: { nombre, email },
+      ip: req.auditMeta?.ip,
+      userAgent: req.auditMeta?.userAgent,
+    });
+
     res.status(201).json({ user: { id: user.id_usuario, email: user.email, nombre: user.nombre }, roles, ...tokens });
   } catch (err) {
     next(createError(500, err.message || 'Error registrando usuario'));
@@ -56,14 +68,50 @@ router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.usuarios.findUnique({ where: { email } });
-    if (!user) return next(createError(401, 'Credenciales inválidas'));
+    if (!user) {
+      await audit({
+        actorEmail: email,
+        action: 'auth.login',
+        resourceType: 'auth',
+        level: 'warn',
+        details: { reason: 'user_not_found' },
+        ip: req.auditMeta?.ip,
+        userAgent: req.auditMeta?.userAgent,
+        outcome: 'failure',
+      });
+      return next(createError(401, 'Credenciales inválidas'));
+    }
 
     const ok = await bcrypt.compare(password || '', user.password_hash || '');
-    if (!ok) return next(createError(401, 'Credenciales inválidas'));
+    if (!ok) {
+      await audit({
+        actorId: user.id_usuario,
+        actorEmail: email,
+        action: 'auth.login',
+        resourceType: 'auth',
+        level: 'warn',
+        details: { reason: 'invalid_password' },
+        ip: req.auditMeta?.ip,
+        userAgent: req.auditMeta?.userAgent,
+        outcome: 'failure',
+      });
+      return next(createError(401, 'Credenciales inválidas'));
+    }
 
     const roles = await getUserRoles(user.id_usuario);
     const tokens = signTokens(user, roles);
     await prisma.sesiones.create({ data: { id_usuario: user.id_usuario, token: tokens.refreshToken, estado: 'activa', fecha_inicio: new Date() } });
+
+    await audit({
+      actorId: user.id_usuario,
+      actorEmail: user.email,
+      action: 'auth.login',
+      resourceType: 'auth',
+      resourceId: user.id_usuario,
+      details: { roles },
+      ip: req.auditMeta?.ip,
+      userAgent: req.auditMeta?.userAgent,
+    });
 
     res.json({ user: { id: user.id_usuario, email: user.email, nombre: user.nombre }, roles, ...tokens });
   } catch (err) {
@@ -78,14 +126,46 @@ router.post('/refresh', async (req, res, next) => {
     if (!refreshToken) return next(createError(400, 'Falta refreshToken'));
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'dev');
     const session = await prisma.sesiones.findFirst({ where: { id_usuario: payload.sub, token: refreshToken, estado: 'activa' } });
-    if (!session) return next(createError(401, 'Token inválido'));
+    if (!session) {
+      await audit({
+        actorId: payload.sub,
+        action: 'auth.refresh',
+        resourceType: 'auth',
+        level: 'warn',
+        details: { reason: 'session_not_found' },
+        ip: req.auditMeta?.ip,
+        userAgent: req.auditMeta?.userAgent,
+        outcome: 'failure',
+      });
+      return next(createError(401, 'Token inválido'));
+    }
 
     const user = await prisma.usuarios.findUnique({ where: { id_usuario: payload.sub } });
     const roles = await getUserRoles(user.id_usuario);
     const tokens = signTokens(user, roles);
 
+    await audit({
+      actorId: user.id_usuario,
+      actorEmail: user.email,
+      action: 'auth.refresh',
+      resourceType: 'auth',
+      resourceId: user.id_usuario,
+      details: { sessionId: session.id_sesion },
+      ip: req.auditMeta?.ip,
+      userAgent: req.auditMeta?.userAgent,
+    });
+
     res.json({ roles, ...tokens });
   } catch (err) {
+    await audit({
+      action: 'auth.refresh',
+      resourceType: 'auth',
+      level: 'warn',
+      details: { reason: err.message },
+      ip: req.auditMeta?.ip,
+      userAgent: req.auditMeta?.userAgent,
+      outcome: 'failure',
+    });
     next(createError(401, err.message || 'Refresh no válido'));
   }
 });
@@ -97,6 +177,15 @@ router.post('/logout', async (req, res, next) => {
     if (refreshToken) {
       await prisma.sesiones.updateMany({ where: { token: refreshToken }, data: { estado: 'caducada', fecha_fin: new Date() } });
     }
+    await audit({
+      actorId: req.user?.sub,
+      actorEmail: req.user?.email,
+      action: 'auth.logout',
+      resourceType: 'auth',
+      details: { hasToken: Boolean(refreshToken) },
+      ip: req.auditMeta?.ip,
+      userAgent: req.auditMeta?.userAgent,
+    });
     res.json({ ok: true });
   } catch (err) {
     next(createError(500, err.message || 'Error en logout'));

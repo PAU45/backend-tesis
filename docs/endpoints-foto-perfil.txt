@@ -1,0 +1,91 @@
+Endpoints relacionados con imágenes / foto de perfil
+Base: http://localhost:3000  (si usáis proxy Vite, las rutas /api/* pueden ir por http://localhost:5173/api/...)
+
+1) Obtener perfil completo (incluye preferencias y foto)
+- GET /api/usuario/perfil
+- Auth: requireAuth
+- Response: JSON con campos del perfil, por ejemplo:
+  {
+    "id_usuario": 6,
+    "nombre": "Paulo",
+    "email": "paulo@soulspace.com",
+    "identificacion": "12345678",
+    "foto_perfil": "http://localhost:3000/uploads/avatars/1762772383321-405816.jpg",
+    "fecha_nacimiento": "1990-01-01T00:00:00.000Z",
+    "preferencias": {
+      "frecuencia_recordatorios": "Semanal",
+      "intereses_bienestar": "Ejercicio, Caminar",
+      "actividades_favoritas": "[]",
+      "sobre_mi": "..."
+    }
+  }
+
+2) Actualizar perfil (nombre, identificación, preferencias, etc.)
+- PUT /api/usuario/perfil
+- Auth: requireAuth
+- Body (JSON): los campos a actualizar, ejemplo:
+  {
+    "nombre": "Paulo",
+    "identificacion": "12345678",
+    "zona_horaria": "UTC-3",
+    "idioma": "es",
+    "frecuencia_recordatorios": "Semanal",
+    "intereses_bienestar": "Ejercicio, Caminar",
+    "actividades_favoritas": ["Meditacion","Ejercicio"],
+    "sobre_mi": "Me gusta correr"
+  }
+- Response: objeto usuario actualizado.
+
+3) Subir / establecer foto de perfil (varias formas)
+- POST /api/usuario/perfil/foto
+- Auth: requireAuth
+- Opciones de payload (server soporta 3 maneras):
+  a) Multipart form (file)
+     - Content-Type: multipart/form-data (no establecer a mano)
+     - Field: photo (file)
+     - Ejemplo (fetch):
+       const fd = new FormData();
+       fd.append('photo', fileInput.files[0]);
+       fetch('/api/usuario/perfil/foto', { method: 'POST', body: fd, credentials: 'include' });
+  b) JSON con URL externa
+     - Content-Type: application/json
+     - Body: { "url": "https://cdn.example.com/avatar.jpg" }
+  c) JSON con base64
+     - Content-Type: application/json
+     - Body: { "foto_perfil": "data:image/png;base64,<...>" }
+- Server behavior:
+  - Si recibe un archivo: lo guarda en uploads/avatars y actualiza usuarios.foto_perfil con la URL absoluta.
+  - Si recibe una URL: actualiza usuarios.foto_perfil con esa URL.
+  - Si recibe base64: decodifica, escribe archivo en uploads/avatars y actualiza usuarios.foto_perfil con la URL absoluta.
+- Response: { ok: true, foto_perfil: "http://.../uploads/avatars/xxx.jpg" }
+- Limits: fileSize <= 2MB; mime must start with image/.
+
+4) Rutas estáticas para servir imágenes (public)
+- GET /uploads/avatars/<filename>
+- Ejemplo: http://localhost:3000/uploads/avatars/1762772383321-405816.jpg
+- El servidor añade CORS headers para orígenes localhost en dev.
+
+5) (Otros endpoints disponibles en el proyecto)
+- POST /api/usuario/:id/photo  => upload/URL for a specific user (owner/admin) — similar functionality.
+- PUT /api/usuario/:id/photo   => replace (alias behavior)
+- GET /api/usuario/:id/photo   => get foto_perfil for user (owner/admin)
+- DELETE /api/usuario/:id/photo => delete local file & clear DB
+- GET /api/usuario/:id/photos  => list files in uploads/avatars (owner/admin)
+
+Pautas para el frontend
+- NO poner manualmente el header Content-Type al enviar FormData. El navegador crea el boundary automáticamente.
+- Si usáis cookies/sesión, enviar fetch/axios con credentials (fetch: credentials: 'include', axios: withCredentials: true).
+- Al recibir la respuesta del upload, actualizar el estado del usuario y usar la URL devuelta en <img src="...">.
+
+Depuración rápida
+- Ver logs del backend: la ruta POST /api/usuario/perfil/foto imprime logs de debug con header Content-Type y metadata del archivo.
+- Revisar disco: C:\backend\uploads\avatars\
+- Probar GET directo al archivo con Origin header para ver CORS:
+  Invoke-WebRequest -Uri 'http://localhost:3000/uploads/avatars/<file>' -Headers @{ Origin = 'http://localhost:5173' }
+
+Notas / buenas prácticas
+- En producción usar S3/CDN y servir URLs estables.
+- Generar thumbnails para UI y usar Cache-Control.
+- Si necesitás control de acceso, sustituir express.static por endpoint que valida sesión y luego hace stream del archivo.
+
+-- Fin de documento --

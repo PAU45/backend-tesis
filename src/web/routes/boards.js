@@ -5,7 +5,8 @@ const { requireGroupRole } = require('../secure/requireGroupRole');
 const router = Router();
 
 // Crear board (solo líder)
-router.post('/', requireAuth, requireGroupRole('lider'), async (req, res) => {
+router.post('/', requireAuth, requireGroupRole('lider'), async (req, res, next) => {
+  console.info('[KANBAN][POST /boards] user=', req.user?.sub, 'body=', req.body);
   const createError = require('http-errors');
   try {
     const { nombre, descripcion, id_grupo } = req.body;
@@ -20,20 +21,23 @@ router.post('/', requireAuth, requireGroupRole('lider'), async (req, res) => {
 });
 
 // Listar boards por grupo (miembro o líder)
-router.get('/grupo/:grupoId', requireAuth, requireGroupRole('miembro'), async (req, res) => {
-  const createError = require('http-errors');
+router.get('/grupo/:grupoId', requireAuth, requireGroupRole('miembro'), async (req, res, next) => {
   try {
-    const grupoId = Number(req.params.grupoId);
-    const boards = await prisma.board.findMany({ where: { id_grupo: grupoId } });
-    if (!boards || boards.length === 0) return next(createError(404, 'No se encontraron boards'));
-    res.json(boards);
+    const { grupoId } = req.params;
+    const boards = await prisma.board.findMany({ where: { id_grupo: Number(grupoId) } });
+    // Siempre devolver array (nunca null)
+    res.json(Array.isArray(boards) ? boards : []);
+    // Log resultado
+    console.info('[KANBAN][GET /boards/grupo/:grupoId] user=', req.user?.sub, 'grupoId=', grupoId, 'results=', boards.length);
   } catch (err) {
-    next(createError(500, err.message || 'Error obteniendo boards'));
+    next(err);
   }
 });
+// ...el handler correcto ya está arriba, eliminamos este duplicado...
 
 // Editar board (solo líder)
-router.put('/:boardId', requireAuth, async (req, res) => {
+router.put('/:boardId', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][PUT /boards/:boardId] user=', req.user?.sub, 'boardId=', req.params.boardId, 'body=', req.body);
   const createError = require('http-errors');
   try {
     const boardId = Number(req.params.boardId);
@@ -52,7 +56,8 @@ router.put('/:boardId', requireAuth, async (req, res) => {
 });
 
 // Eliminar board (solo líder)
-router.delete('/:boardId', requireAuth, async (req, res) => {
+router.delete('/:boardId', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][DELETE /boards/:boardId] user=', req.user?.sub, 'boardId=', req.params.boardId);
   const createError = require('http-errors');
   try {
     const boardId = Number(req.params.boardId);

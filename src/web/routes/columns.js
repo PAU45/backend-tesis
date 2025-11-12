@@ -5,7 +5,8 @@ const { requireGroupRole } = require('../secure/requireGroupRole');
 const router = Router();
 
 // Crear columna (solo líder)
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][POST /columns] user=', req.user?.sub, 'body=', req.body);
   const createError = require('http-errors');
   try {
     const { nombre, id_board, orden } = req.body;
@@ -23,25 +24,25 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // Listar columnas por board (miembro o líder)
-router.get('/board/:boardId', requireAuth, async (req, res) => {
-  const createError = require('http-errors');
+router.get('/board/:boardId', requireAuth, async (req, res, next) => {
   try {
     const boardId = Number(req.params.boardId);
     const board = await prisma.board.findUnique({ where: { id: boardId } });
-    if (!board) return next(createError(404, 'Board no encontrado'));
+    if (!board) return res.json([]); // Si no existe el board, devolver array vacío
     req.params.grupoId = board.id_grupo;
     await requireGroupRole('miembro')(req, res, async () => {
       const columnas = await prisma.column.findMany({ where: { id_board: boardId }, orderBy: { orden: 'asc' } });
-      if (!columnas || columnas.length === 0) return next(createError(404, 'No se encontraron columnas'));
-      res.json(columnas);
+      res.json(Array.isArray(columnas) ? columnas : []);
+      console.info('[KANBAN][GET /columns/board/:boardId] user=', req.user?.sub, 'boardId=', boardId, 'results=', columnas.length);
     });
   } catch (err) {
-    next(createError(500, err.message || 'Error obteniendo columnas'));
+    next(err);
   }
 });
 
 // Editar columna (solo líder)
-router.put('/:columnId', requireAuth, async (req, res) => {
+router.put('/:columnId', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][PUT /columns/:columnId] user=', req.user?.sub, 'columnId=', req.params.columnId, 'body=', req.body);
   const createError = require('http-errors');
   try {
     const columnId = Number(req.params.columnId);
@@ -60,7 +61,8 @@ router.put('/:columnId', requireAuth, async (req, res) => {
 });
 
 // Eliminar columna (solo líder)
-router.delete('/:columnId', requireAuth, async (req, res) => {
+router.delete('/:columnId', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][DELETE /columns/:columnId] user=', req.user?.sub, 'columnId=', req.params.columnId);
   const createError = require('http-errors');
   try {
     const columnId = Number(req.params.columnId);
@@ -78,7 +80,8 @@ router.delete('/:columnId', requireAuth, async (req, res) => {
 });
 
 // Cambiar orden de columnas (solo líder)
-router.patch('/reorder', requireAuth, async (req, res) => {
+router.patch('/reorder', requireAuth, async (req, res, next) => {
+  console.info('[KANBAN][PATCH /columns/reorder] user=', req.user?.sub, 'body=', req.body);
   const createError = require('http-errors');
   try {
     const { id_board, ordenes } = req.body; // ordenes: [{id, orden}]

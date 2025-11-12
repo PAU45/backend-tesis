@@ -5,7 +5,7 @@ const { requireGroupRole } = require('../secure/requireGroupRole');
 const router = Router();
 
 // Crear sprint (solo líder)
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const { id_board, nombre, fechaInicio, fechaFin, estado } = req.body;
@@ -23,7 +23,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // Listar sprints por board (miembro o líder)
-router.get('/board/:boardId', requireAuth, async (req, res) => {
+router.get('/board/:boardId', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const boardId = Number(req.params.boardId);
@@ -41,7 +41,7 @@ router.get('/board/:boardId', requireAuth, async (req, res) => {
 });
 
 // Editar sprint (solo líder)
-router.put('/:sprintId', requireAuth, async (req, res) => {
+router.put('/:sprintId', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const sprintId = Number(req.params.sprintId);
@@ -60,7 +60,7 @@ router.put('/:sprintId', requireAuth, async (req, res) => {
 });
 
 // Eliminar sprint (solo líder)
-router.delete('/:sprintId', requireAuth, async (req, res) => {
+router.delete('/:sprintId', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const sprintId = Number(req.params.sprintId);
@@ -78,7 +78,7 @@ router.delete('/:sprintId', requireAuth, async (req, res) => {
 });
 
 // Asignar tareas a sprint (solo líder)
-router.patch('/:sprintId/assign-tasks', requireAuth, async (req, res) => {
+router.patch('/:sprintId/assign-tasks', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const sprintId = Number(req.params.sprintId);

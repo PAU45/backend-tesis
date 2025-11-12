@@ -44,7 +44,7 @@ const resources = {
 
 router.use(requireAuth);
 
-router.get('/:resource', async (req, res) => {
+router.get('/:resource', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const model = resources[req.params.resource];
@@ -56,7 +56,7 @@ router.get('/:resource', async (req, res) => {
   }
 });
 
-router.get('/:resource/:id', async (req, res) => {
+router.get('/:resource/:id', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const model = resources[req.params.resource];
@@ -71,7 +71,7 @@ router.get('/:resource/:id', async (req, res) => {
   }
 });
 
-router.post('/:resource', async (req, res) => {
+router.post('/:resource', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const model = resources[req.params.resource];
@@ -83,7 +83,7 @@ router.post('/:resource', async (req, res) => {
   }
 });
 
-router.put('/:resource/:id', async (req, res) => {
+router.put('/:resource/:id', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const model = resources[req.params.resource];
@@ -97,7 +97,7 @@ router.put('/:resource/:id', async (req, res) => {
   }
 });
 
-router.delete('/:resource/:id', async (req, res) => {
+router.delete('/:resource/:id', async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const model = resources[req.params.resource];

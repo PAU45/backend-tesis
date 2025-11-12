@@ -17,6 +17,7 @@ const { boardsRouter } = require('./routes/boards');
 const { columnsRouter } = require('./routes/columns');
 const { tasksRouter } = require('./routes/tasks');
 const { sprintsRouter } = require('./routes/sprints');
+const { adminAuditRouter } = require('./routes/adminAudit');
 
 const router = Router();
 
@@ -49,7 +50,22 @@ router.use('/boards', boardsRouter);
 router.use('/columns', columnsRouter);
 
 router.use('/tasks', tasksRouter);
+// Compatibility alias: some frontends use /kanban/tasks
+router.use('/kanban/tasks', tasksRouter);
+
+// Compatibility alias: some frontends call /kanban/groups — forward to the existing grupos router
+router.use('/kanban/groups', gruposRouter);
+
+// === IA Gemini Chat ===
+const iaRoutes = require('./routes/ia');
+router.use('/api', iaRoutes);
+
+// === IA Memoria ===
+const iaMemoriaRoutes = require('./routes/ia-memoria');
+router.use('/api', iaMemoriaRoutes);
 
 router.use('/sprints', sprintsRouter);
+
+router.use('/admin/audit', adminAuditRouter);
 
 module.exports = { apiRouter: router };

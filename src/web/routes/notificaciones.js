@@ -4,7 +4,7 @@ const { requireAuth } = require('../secure/requireAuth');
 const router = Router();
 
 // GET /api/usuario/notificaciones - Preferencias de notificaciones del usuario
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;
@@ -36,7 +36,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/usuario/notificaciones - Actualizar preferencias
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;

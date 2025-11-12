@@ -4,7 +4,7 @@ const { requireAuth } = require('../secure/requireAuth');
 const router = Router();
 
 // GET /api/usuario/apariencia - Preferencias de apariencia
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;
@@ -24,7 +24,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/usuario/apariencia - Actualizar preferencias de apariencia
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;

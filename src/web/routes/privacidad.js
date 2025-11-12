@@ -4,7 +4,7 @@ const { requireAuth } = require('../secure/requireAuth');
 const router = Router();
 
 // GET /api/usuario/privacidad - Preferencias de privacidad y datos
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;
@@ -33,7 +33,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/usuario/privacidad - Actualizar preferencias de privacidad
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', requireAuth, async (req, res, next) => {
   const createError = require('http-errors');
   try {
     const userId = req.user.sub;
